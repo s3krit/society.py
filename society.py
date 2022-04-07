@@ -49,7 +49,7 @@ def get_strikes(address):
 def get_defender():
     return __RPC__.query(module = 'Society', storage_function = 'Defender').value
 
-def get_matrix(address):
+def get_matrix_handle(address):
     # first check if we have an override
     __DB_CUR__.execute(''' SELECT matrix_handle FROM accounts WHERE address = ? ''', (address,))
     __DB_CONN__.commit()
@@ -60,6 +60,28 @@ def get_matrix(address):
         return __RPC__.query(module = 'Identity', storage_function = 'IdentityOf', params = [address]).value['info']['riot']['Raw']
     except:
         return None
+
+def get_member_info(address):
+    info = {
+        'address': address,
+        'state': get_member_state(address),
+        'element_handle': get_matrix_handle(address),
+        'strikes': get_strikes(address),
+        'is_founder': is_founder(address),
+    }
+    return info
+
+def get_member_state(address):
+    if is_member(address):
+        return MemberState.MEMBER
+    elif is_suspended_member(address):
+        return MemberState.SUSPENDED_MEMBER
+    elif is_candidate(address):
+        return MemberState.CANDIDATE
+    elif is_suspended_candidate(address):
+        return MemberState.SUSPENDED_CANDIDATE
+    else:
+        return MemberState.NON_MEMBER
 
 # checks
 
@@ -82,28 +104,6 @@ def is_founder(address):
 
 def is_defender(address):
     return get_defender() == address
-
-def get_member_info(address):
-    info = {
-        'address': address,
-        'state': get_member_state(address),
-        'element_handle': get_matrix(address),
-        'strikes': get_strikes(address),
-        'is_founder': is_founder(address),
-    }
-    return info
-
-def get_member_state(address):
-    if is_member(address):
-        return MemberState.MEMBER
-    elif is_suspended_member(address):
-        return MemberState.SUSPENDED_MEMBER
-    elif is_candidate(address):
-        return MemberState.CANDIDATE
-    elif is_suspended_candidate(address):
-        return MemberState.SUSPENDED_CANDIDATE
-    else:
-        return MemberState.NON_MEMBER
 
 # util
 def is_valid_matrix_handle(matrix_handle):
