@@ -1,7 +1,7 @@
-from signal import raise_signal
-import substrateinterface
-import sqlite3
 from enum import Enum
+import re
+import sqlite3
+import substrateinterface
 
 class MemberState(Enum):
     MEMBER = 1
@@ -55,7 +55,6 @@ def get_matrix(address):
     __DB_CONN__.commit()
     row = __DB_CUR__.fetchone()
     if row:
-        print("bing")
         return row[0]
     try:
         return __RPC__.query(module = 'Identity', storage_function = 'IdentityOf', params = [address]).value['info']['riot']['Raw']
@@ -108,4 +107,5 @@ def get_member_state(address):
 
 # util
 def is_valid_matrix_handle(matrix_handle):
-    return len(matrix_handle) > 0
+    matrix_handle_re = re.compile(r'^@[^:]+:.*\..*$')
+    return bool(matrix_handle_re.search(matrix_handle))

@@ -51,3 +51,14 @@ def test_setting_and_unsetting_override():
     assert society.get_matrix(test_account) == "@testoverride:matrix.org"
     society.unset_matrix(test_account)
     assert society.get_matrix(test_account) == "@s3krit:fairydust.space"
+
+def test_matrix_handle_validation():
+    test_cases = {
+        "@testuser:matrix.org" : True,
+        "asdasdas dasf sdf " : False,
+        "testuser@matrix.org" : False,
+        "@good_address:matrix.org" : True,
+        "@test:dodgydomain." : True,
+    }
+    for test_case in test_cases:
+        assert society.is_valid_matrix_handle(test_case) == test_cases[test_case]
