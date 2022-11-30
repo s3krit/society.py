@@ -1,7 +1,7 @@
 from enum import Enum
 import re
 import sqlite3
-import substrateinterface
+from substrateinterface import SubstrateInterface
 
 class MemberState(Enum):
     MEMBER = 1
@@ -10,10 +10,12 @@ class MemberState(Enum):
     SUSPENDED_CANDIDATE = 4
     NON_MEMBER = 5
 
-def init(rpc_url, db_path):
+DEFAULT_DB_PATH = "./society-overrides.db"
+DEFAULT_RPC_URL = "wss://kusama-rpc.polkadot.io/"
+def init(rpc_url=DEFAULT_RPC_URL, db_path=DEFAULT_DB_PATH):
     # Hope we can leave the interface open for the whole session
     global __RPC__
-    __RPC__ = substrateinterface.SubstrateInterface(url = rpc_url)
+    __RPC__ = SubstrateInterface(url = rpc_url)
 
     # We set up a database for locally overriding things like matrix handle
     global __DB_CONN__
@@ -70,6 +72,9 @@ def get_member_info(address):
         'is_founder': is_founder(address),
     }
     return info
+
+def get_founder():
+    return __RPC__.query(module = 'Society', storage_function = 'Founder').value
 
 def get_member_state(address):
     if is_member(address):

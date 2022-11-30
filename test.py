@@ -7,12 +7,12 @@ pp = pprint.PrettyPrinter(indent=4)
 test_accounts = {
     'member': 'FUfBKr2pDxKrxmExGp4hjU6St4BDgffzKcyAqv6pruGnez1',
     'nonmember': 'D6CuPyACRzF5a7vkRX4UF9Vhw1TBneEo81jUmuhBYvCZ27Y',
-    'suspended_member': 'CgEt8AwW9SThQXpLBAZy3MpKgNG7ZHaEDGeV5MLqHVPVoJg',
-    'suspended_candidate': 'EkjeSWp3BsyJoh9hbRa6JbnWFWN3g3dnfvhGeqjLmL1FdNA',
+    'suspended_member': 'FUzksiAhxzSvvPqiYvUEwK32rFf6Fmyug9GZEdbMaoLmwh5',
+    'suspended_candidate': 'FoiTxb8pYUjkxNGZbWidq4o6KyTjrYpWxbEBRJR7XBJXjQs',
     # This one will need updating regularly until we have a decent test chain
-    'candidate': 'FXKYsF5CujHpwL5MegfrXkUB657mLA2Xfx7WbZkrN21BxpC',
+    'candidate': 'ECwzHnerF6zjynXWh5aMJ1TWHE4dk2ZxwYqWk8cmdWrtatc',
     'founder': 'Dikw9VJqJ4fJFcXuKaSqu3eSwBQM6zC8ja9rdAP3RbfeK1Y',
-    'defender': 'Ft2cSCw4V47d2S7V9nN2S6V5ByGmAnkfbkFbWUVuHVuaMvW',
+    'defender': 'GsgSP79vBqKu4xvGZaNQRqVFmDBxsf6ztAw1t1R9KqNWjsC',
     'bad_addr': 'asdasdasdasd',
 }
 society.init("wss://kusama-rpc.polkadot.io/", "./society_overrides_test.db")
@@ -40,17 +40,17 @@ def test_matrix_handle_overrides():
         # Has a matrix account on-chain that is overriden by the database
         "overridden_matrix": "HL8bEp8YicBdrUmJocCAWVLKUaR2dd1y6jnD934pbre3un1",
     }
-    assert society.get_matrix(matrix_test_accounts['onchain_matrix']) == "@s3krit:fairydust.space"
-    assert society.get_matrix(matrix_test_accounts['offchain_matrix']) == "@testuser1:matrix.org"
-    assert society.get_matrix(matrix_test_accounts['overridden_matrix']) == "@testuser2:matrix.org"
+    assert society.get_matrix_handle(matrix_test_accounts['onchain_matrix']) == "@s3krit:fairydust.space"
+    assert society.get_matrix_handle(matrix_test_accounts['offchain_matrix']) == "@testuser1:matrix.org"
+    assert society.get_matrix_handle(matrix_test_accounts['overridden_matrix']) == "@testuser2:matrix.org"
 
 def test_setting_and_unsetting_override():
     test_account = "FUfBKr2pDxKrxmExGp4hjU6St4BDgffzKcyAqv6pruGnez1"
-    assert society.get_matrix(test_account) == "@s3krit:fairydust.space"
+    assert society.get_matrix_handle(test_account) == "@s3krit:fairydust.space"
     society.set_matrix(test_account, "@testoverride:matrix.org")
-    assert society.get_matrix(test_account) == "@testoverride:matrix.org"
+    assert society.get_matrix_handle(test_account) == "@testoverride:matrix.org"
     society.unset_matrix(test_account)
-    assert society.get_matrix(test_account) == "@s3krit:fairydust.space"
+    assert society.get_matrix_handle(test_account) == "@s3krit:fairydust.space"
 
 def test_matrix_handle_validation():
     test_cases = {
