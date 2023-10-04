@@ -25,6 +25,11 @@ bot = niobot.NioBot(
     owner_id = "@s3krit:fairydust.space"
 )
 
+async def periodic_reconnect():
+    while True:
+        # Reconnect every 10 minutes
+        await asyncio.sleep(600)
+        society.init(rpc_url, db_path)
 
 async def period_message():
     last_blocks_left = 0
@@ -68,6 +73,7 @@ async def on_command_error(ctx: Context, error: Exception):
 @bot.on_event("ready")
 async def on_ready(_: niobot.SyncResponse):
     asyncio.create_task(period_message())
+    asyncio.create_task(periodic_reconnect())
 
 @bot.command()
 async def ping(ctx: Context):
@@ -134,7 +140,12 @@ async def unset_address(ctx: Context):
         await ctx.respond("Failed to unset address for {}".format(ctx.message.sender))
 
 @bot.command()
+async def reconnect(ctx: Context):
+    society.init(rpc_url, db_path)
+    await ctx.respond("Reconnected to RPC")
+
+@bot.command()
 async def usage(ctx: Context):
-    await ctx.respond("Usage: `!ping`, `!defender`, `!info <address>`, `!candidates`, `!head`, `!set_address <address>`, `!unset_address`")
+    await ctx.respond("Usage: `!ping`, `!defender`, `!info <address>`, `!candidates`, `!head`, `!set_address <address>`, `!unset_address`, `!reconnect`")
 
 bot.run(access_token=matrix_access_token)
