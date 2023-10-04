@@ -10,7 +10,11 @@ class MemberState(Enum):
     SUSPENDED_CANDIDATE = 4
     NON_MEMBER = 5
 
-DEFAULT_DB_PATH = "./society-overrides.db"
+class Period(Enum):
+    CLAIM =1
+    VOTING = 2
+
+DEFAULT_DB_PATH = "./society_overrides.db"
 DEFAULT_RPC_URL = "wss://kusama-rpc.polkadot.io/"
 def init(rpc_url=DEFAULT_RPC_URL, db_path=DEFAULT_DB_PATH):
     # Hope we can leave the interface open for the whole session
@@ -26,30 +30,52 @@ def init(rpc_url=DEFAULT_RPC_URL, db_path=DEFAULT_DB_PATH):
 # sets
 
 # sets an override for the matrix handle - will use this even if the address has an identity set
-def set_matrix(address, matrix_handle):
-    if not is_valid_matrix_handle(matrix_handle):
+def set_matrix_handle(address, matrix_handle):
+    if not is_valid_matrix_handle(matrix_handle) or not is_valid_address(address):
         return False
     __DB_CUR__.execute(''' INSERT OR REPLACE INTO accounts (address, matrix_handle) VALUES (?, ?) ''', (address, matrix_handle))
     __DB_CONN__.commit()
     return True
 
-def unset_matrix(address):
+def unset_matrix_handle(address):
     __DB_CUR__.execute(''' DELETE FROM accounts WHERE address = ? ''', (address,))
     __DB_CONN__.commit()
     return True
 
 # gets
-def get_members():
+def get_members_addresses():
     return __RPC__.query(module = 'Society', storage_function = 'Members').value
 
-def get_candidates():
+def get_candidates_addresses():
     return __RPC__.query(module = 'Society', storage_function = 'Candidates').value
+
+def get_candidates():
+    candidates = []
+    for candidate in get_candidates_addresses():
+        handle = get_matrix_handle(candidate['who'])
+        if handle:
+            candidates.append(handle)
+        else:
+            candidates.append(candidate['who'])
+    return candidates
 
 def get_strikes(address):
     return __RPC__.query(module = 'Society', storage_function = 'Strikes', params = [address]).value
 
-def get_defender():
+def get_defender_address():
     return __RPC__.query(module = 'Society', storage_function = 'Defender').value
+
+def get_head_address():
+    return __RPC__.query(module = 'Society', storage_function = 'Head').value
+
+def get_defender():
+    defender = get_defender_address()
+    if defender:
+        handle = get_matrix_handle(defender)
+        if handle:
+            return handle
+        else:
+            return defender
 
 def get_matrix_handle(address):
     # first check if we have an override
@@ -70,6 +96,7 @@ def get_member_info(address):
         'element_handle': get_matrix_handle(address),
         'strikes': get_strikes(address),
         'is_founder': is_founder(address),
+        'is_defender': is_defender(address),
     }
     return info
 
@@ -88,10 +115,16 @@ def get_member_state(address):
     else:
         return MemberState.NON_MEMBER
 
+def get_blocks_until_next_period():
+    # Current block number
+    block = __RPC__.query(module = "System", storage_function = "Number").value
+    period = 100800
+    return period - (block % period)
+
 # checks
 
 def is_member(address):
-    return address in get_members()
+    return address in get_members_addresses()
 
 def is_suspended_member(address):
     return __RPC__.query(module = 'Society', storage_function = 'SuspendedMembers', params = [address] ).value
@@ -108,9 +141,12 @@ def is_founder(address):
     return __RPC__.query(module = 'Society', storage_function = 'Founder').value == address
 
 def is_defender(address):
-    return get_defender() == address
+    return get_defender_address() == address
 
 # util
 def is_valid_matrix_handle(matrix_handle):
     matrix_handle_re = re.compile(r'^@[^:]+:.*\..*$')
     return bool(matrix_handle_re.search(matrix_handle))
+
+def is_valid_address(address):
+    return __RPC__.is_valid_ss58_address(address)

@@ -7,14 +7,14 @@ pp = pprint.PrettyPrinter(indent=4)
 test_accounts = {
     'member': 'FUfBKr2pDxKrxmExGp4hjU6St4BDgffzKcyAqv6pruGnez1',
     'nonmember': 'D6CuPyACRzF5a7vkRX4UF9Vhw1TBneEo81jUmuhBYvCZ27Y',
-    'suspended_member': 'FUzksiAhxzSvvPqiYvUEwK32rFf6Fmyug9GZEdbMaoLmwh5',
-    'suspended_candidate': 'FoiTxb8pYUjkxNGZbWidq4o6KyTjrYpWxbEBRJR7XBJXjQs',
-    # This one will need updating regularly until we have a decent test chain
-    'candidate': 'ECwzHnerF6zjynXWh5aMJ1TWHE4dk2ZxwYqWk8cmdWrtatc',
-    'founder': 'Dikw9VJqJ4fJFcXuKaSqu3eSwBQM6zC8ja9rdAP3RbfeK1Y',
-    'defender': 'GsgSP79vBqKu4xvGZaNQRqVFmDBxsf6ztAw1t1R9KqNWjsC',
-    'bad_addr': 'asdasdasdasd',
-}
+    'suspended_member': 'CgEt8AwW9SThQXpLBAZy3MpKgNG7ZHaEDGeV5MLqHVPVoJg',
+    'suspended_candidate': 'EkjeSWp3BsyJoh9hbRa6JbnWFWN3g3dnfvhGeqjLmL1FdNA',
+    'candidate': 'D2wLG2HMJfYkpnSnSTrYYH5Js5yooNTwKotxx55ayfriefH', 'bad_addr':
+    'asdasdasdasd', 'defender':
+    'GhQ3gB8oaLZfjSd6gyeYZgymnJ2LEmvaUrSELBbva9342Y6', 'founder':
+    'Dikw9VJqJ4fJFcXuKaSqu3eSwBQM6zC8ja9rdAP3RbfeK1Y'
+    }
+
 society.init("wss://kusama-rpc.polkadot.io/", "./society_overrides_test.db")
 db_setup.setup_test()
 
@@ -47,9 +47,9 @@ def test_matrix_handle_overrides():
 def test_setting_and_unsetting_override():
     test_account = "FUfBKr2pDxKrxmExGp4hjU6St4BDgffzKcyAqv6pruGnez1"
     assert society.get_matrix_handle(test_account) == "@s3krit:fairydust.space"
-    society.set_matrix(test_account, "@testoverride:matrix.org")
+    society.set_matrix_handle(test_account, "@testoverride:matrix.org")
     assert society.get_matrix_handle(test_account) == "@testoverride:matrix.org"
-    society.unset_matrix(test_account)
+    society.unset_matrix_handle(test_account)
     assert society.get_matrix_handle(test_account) == "@s3krit:fairydust.space"
 
 def test_matrix_handle_validation():
