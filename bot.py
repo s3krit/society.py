@@ -37,7 +37,6 @@ async def period_message():
         blocks_left = society.get_blocks_until_next_period()
         print("Blocks left until next period: {}".format(blocks_left))
         if blocks_left > last_blocks_left:
-            last_blocks_left = blocks_left
             defender = society.get_defender()
             candidates = society.get_candidates()
             head = society.get_head_address()
@@ -57,6 +56,8 @@ The new head is `{}`.""".format(candidates, head)
 There are no candidates for this period."""
             print(message)
             await bot.send_message(room, message)
+
+        last_blocks_left = blocks_left
         await asyncio.sleep(60)
 
 @bot.on_event("command_error")
