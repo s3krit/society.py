@@ -33,10 +33,11 @@ async def periodic_reconnect():
 
 async def period_message():
     last_blocks_left = 0
+    first_run = True
     while True:
         blocks_left = society.get_blocks_until_next_period()
         print("Blocks left until next period: {}".format(blocks_left))
-        if blocks_left > last_blocks_left:
+        if blocks_left > last_blocks_left and not first_run:
             defender = society.get_defender()
             candidates = society.get_candidates()
             head = society.get_head_address()
@@ -58,6 +59,7 @@ There are no candidates for this period."""
             await bot.send_message(room, message)
 
         last_blocks_left = blocks_left
+        first_run = False
         await asyncio.sleep(60)
 
 @bot.on_event("command_error")
