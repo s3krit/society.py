@@ -1,7 +1,10 @@
 from enum import Enum
 import re
 import sqlite3
+import time
 from substrateinterface import SubstrateInterface
+from substrateinterface.exceptions import SubstrateRequestException
+from websocket import WebSocketConnectionClosedException, WebSocketBadStatusException
 
 class MemberState(Enum):
     MEMBER = 1
@@ -27,6 +30,16 @@ def init(rpc_url=DEFAULT_RPC_URL, db_path=DEFAULT_DB_PATH):
     __DB_CONN__ = sqlite3.connect(db_path)
     __DB_CUR__ = __DB_CONN__.cursor()
 
+def rpc_call(module, storage_function, params = []):
+    try:
+        return __RPC__.query(module = module, storage_function = storage_function, params = params)
+    except (WebSocketConnectionClosedException, ConnectionRefusedError,
+                        WebSocketBadStatusException, BrokenPipeError, SubstrateRequestException) as e:
+        print("RPC call failed, :{}, retrying".format(e))
+        time.sleep(1)
+        __RPC__.connect_websocket()
+        rpc_call(module, storage_function, params)
+
 # sets
 
 # sets an override for the matrix handle - will use this even if the address has an identity set
@@ -44,10 +57,10 @@ def unset_matrix_handle(address):
 
 # gets
 def get_members_addresses():
-    return __RPC__.query(module = 'Society', storage_function = 'Members').value
+    return rpc_call(module = 'Society', storage_function = 'Members').value
 
 def get_candidates_addresses():
-    return __RPC__.query(module = 'Society', storage_function = 'Candidates').value
+    return rpc_call(module = 'Society', storage_function = 'Candidates').value
 
 def get_candidates():
     candidates = []
@@ -60,13 +73,13 @@ def get_candidates():
     return candidates
 
 def get_strikes(address):
-    return __RPC__.query(module = 'Society', storage_function = 'Strikes', params = [address]).value
+    return rpc_call(module = 'Society', storage_function = 'Strikes', params = [address]).value
 
 def get_defender_address():
-    return __RPC__.query(module = 'Society', storage_function = 'Defender').value
+    return rpc_call(module = 'Society', storage_function = 'Defender').value
 
 def get_head_address():
-    return __RPC__.query(module = 'Society', storage_function = 'Head').value
+    return rpc_call(module = 'Society', storage_function = 'Head').value
 
 def get_defender():
     defender = get_defender_address()
@@ -85,7 +98,7 @@ def get_matrix_handle(address):
     if row:
         return row[0]
     try:
-        return __RPC__.query(module = 'Identity', storage_function = 'IdentityOf', params = [address]).value['info']['riot']['Raw']
+        return rpc_call(module = 'Identity', storage_function = 'IdentityOf', params = [address]).value['info']['riot']['Raw']
     except:
         return None
 
@@ -101,7 +114,7 @@ def get_member_info(address):
     return info
 
 def get_founder():
-    return __RPC__.query(module = 'Society', storage_function = 'Founder').value
+    return rpc_call(module = 'Society', storage_function = 'Founder').value
 
 def get_member_state(address):
     if is_member(address):
@@ -117,7 +130,7 @@ def get_member_state(address):
 
 def get_blocks_until_next_period():
     # Current block number
-    block = __RPC__.query(module = "System", storage_function = "Number").value
+    block = rpc_call(module = "System", storage_function = "Number").value
     period = 100800
     return period - (block % period)
 
@@ -127,18 +140,18 @@ def is_member(address):
     return address in get_members_addresses()
 
 def is_suspended_member(address):
-    return __RPC__.query(module = 'Society', storage_function = 'SuspendedMembers', params = [address] ).value
+    return rpc_call(module = 'Society', storage_function = 'SuspendedMembers', params = [address] ).value
 
 def is_candidate(address):
-    for candidate in __RPC__.query(module = 'Society', storage_function = 'Candidates').value:
+    for candidate in rpc_call(module = 'Society', storage_function = 'Candidates').value:
         if candidate['who'] == address:
             return True
 
 def is_suspended_candidate(address):
-    return __RPC__.query(module = 'Society', storage_function = 'SuspendedCandidates', params = [address] ).value
+    return rpc_call(module = 'Society', storage_function = 'SuspendedCandidates', params = [address] ).value
 
 def is_founder(address):
-    return __RPC__.query(module = 'Society', storage_function = 'Founder').value == address
+    return rpc_call(module = 'Society', storage_function = 'Founder').value == address
 
 def is_defender(address):
     return get_defender_address() == address
@@ -149,4 +162,4 @@ def is_valid_matrix_handle(matrix_handle):
     return bool(matrix_handle_re.search(matrix_handle))
 
 def is_valid_address(address):
-    return __RPC__.is_valid_ss58_address(address)
+    return rpc_call.is_valid_ss58_address(address)

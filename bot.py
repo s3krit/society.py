@@ -14,22 +14,17 @@ room = os.getenv("MATRIX_ROOM")
 matrix_access_token = os.getenv("MATRIX_TOKEN")
 rpc_url = os.getenv("RPC_URL")
 db_path = os.getenv("DB_PATH")
+prefix = os.getenv("PREFIX")
 
 society.init(rpc_url, db_path)
 
 bot = niobot.NioBot(
     homeserver = "https://matrix.org",
     user_id = "@societybot:matrix.org",
-    command_prefix = "!",
+    command_prefix = prefix,
     case_insensitive = False,
     owner_id = "@s3krit:fairydust.space"
 )
-
-async def periodic_reconnect():
-    while True:
-        # Reconnect every 10 minutes
-        await asyncio.sleep(600)
-        society.init(rpc_url, db_path)
 
 async def period_message():
     last_blocks_left = 0
@@ -76,7 +71,6 @@ async def on_command_error(ctx: Context, error: Exception):
 @bot.on_event("ready")
 async def on_ready(_: niobot.SyncResponse):
     asyncio.create_task(period_message())
-    asyncio.create_task(periodic_reconnect())
 
 @bot.command()
 async def ping(ctx: Context):
