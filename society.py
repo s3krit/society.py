@@ -5,6 +5,7 @@ import time
 from substrateinterface import SubstrateInterface
 from substrateinterface.exceptions import SubstrateRequestException
 from websocket import WebSocketConnectionClosedException, WebSocketBadStatusException
+from json.decoder import JSONDecodeError
 
 class MemberState(Enum):
     MEMBER = 1
@@ -34,7 +35,7 @@ def rpc_call(module, storage_function, params = []):
     try:
         return __RPC__.query(module = module, storage_function = storage_function, params = params)
     except (WebSocketConnectionClosedException, ConnectionRefusedError,
-                        WebSocketBadStatusException, BrokenPipeError, SubstrateRequestException) as e:
+                        WebSocketBadStatusException, BrokenPipeError, SubstrateRequestException, JSONDecodeError) as e:
         print("RPC call failed, :{}, retrying".format(e))
         time.sleep(1)
         __RPC__.connect_websocket()
