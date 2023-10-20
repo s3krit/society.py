@@ -8,14 +8,16 @@ from dotenv import load_dotenv
 from niobot import Context
 
 load_dotenv()
-logging.basicConfig(level=logging.DEBUG)
 
 room = os.getenv("MATRIX_ROOM")
 matrix_access_token = os.getenv("MATRIX_TOKEN")
 rpc_url = os.getenv("RPC_URL")
 db_path = os.getenv("DB_PATH")
 prefix = os.getenv("PREFIX")
+loglevel = os.getenv("LOGLEVEL") or "INFO"
+print("Logging level: {}".format(loglevel))
 
+logging.basicConfig(level=logging.DEBUG)
 society.init(rpc_url, db_path)
 
 bot = niobot.NioBot(
