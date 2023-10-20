@@ -37,7 +37,10 @@ def rpc_call(module, storage_function, params = []):
         logging.error("RPC call failed, :{}, retrying".format(e))
         time.sleep(1)
         __RPC__.connect_websocket()
-        rpc_call(module, storage_function, params)
+        if params:
+            rpc_call(module, storage_function, params)
+        else:
+            rpc_call(module, storage_function)
 
 # sets
 
@@ -133,6 +136,20 @@ def get_blocks_until_next_period():
     period = 100800
     return period - (block % period)
 
+def get_address_for_matrix_handle(matrix_handle):
+    # first check if we have an override
+    __DB_CUR__.execute(''' SELECT address FROM accounts WHERE matrix_handle = ? ''', (matrix_handle,))
+    __DB_CONN__.commit()
+    row = __DB_CUR__.fetchone()
+    if row:
+        return row[0]
+    # try:
+    #     return rpc_call(module = 'Identity', storage_function = 'SubsOf', params = [matrix_handle]).value
+    # except:
+    #     return None
+    else:
+        return None
+
 # checks
 
 def is_member(address):
@@ -161,4 +178,4 @@ def is_valid_matrix_handle(matrix_handle):
     return bool(matrix_handle_re.search(matrix_handle))
 
 def is_valid_address(address):
-    return rpc_call.is_valid_ss58_address(address)
+    return __RPC__.is_valid_ss58_address(address)

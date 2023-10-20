@@ -59,6 +59,16 @@ There are no candidates for this period."""
         first_run = False
         await asyncio.sleep(60)
 
+async def get_info(address):
+    info = society.get_member_info(address)
+    if info:
+        response = ""
+        for key in info:
+            response += "* **{}**: {}\n".format(key.capitalize(), info[key])
+        return response
+    else:
+        None
+
 @bot.on_event("command_error")
 async def on_command_error(ctx: Context, error: Exception):
     if isinstance(error, niobot.CommandArgumentsError):
@@ -93,12 +103,9 @@ async def info(ctx: Context, address: str):
         await ctx.respond("Usage: `!info <address>`")
         return
     address = ctx.args[0]
-    info = society.get_member_info(address)
+    info = await get_info(address)
     if info:
-        response = ""
-        for key in info:
-            response += "* **{}**: {}\n".format(key.capitalize(), info[key])
-        await ctx.respond(response)
+        await ctx.respond(info)
     else:
         await ctx.respond("No info available for that address")
 
@@ -139,12 +146,16 @@ async def unset_address(ctx: Context):
         await ctx.respond("Failed to unset address for {}".format(ctx.message.sender))
 
 @bot.command()
-async def reconnect(ctx: Context):
-    society.init(rpc_url, db_path)
-    await ctx.respond("Reconnected to RPC")
+async def me(ctx: Context):
+    address = society.get_address_for_matrix_handle(ctx.message.sender)
+    if address:
+        info = await get_info(address)
+        await ctx.respond(info)
+    else:
+        await ctx.respond("You have not set your address yet. To do so, use `!set_address <address>`. Note that the !me command does not currently support addresses with an on-chain identity set.")
 
 @bot.command()
 async def usage(ctx: Context):
-    await ctx.respond("Usage: `!ping`, `!defender`, `!info <address>`, `!candidates`, `!head`, `!set_address <address>`, `!unset_address`, `!reconnect`")
+    await ctx.respond("Usage: `!ping`, `!defender`, `!info <address>`, `!candidates`, `!head`, `!set_address <address>`, `!unset_address`, `!me`")
 
 bot.run(access_token=matrix_access_token)
