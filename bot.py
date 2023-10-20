@@ -86,11 +86,13 @@ async def on_ready(_: niobot.SyncResponse):
 
 @bot.command()
 async def ping(ctx: Context):
+    """Shows the roundtrip latency"""
     roundtrip = (time.time() * 1000 - ctx.event.server_timestamp)
     await ctx.respond("Pong! Took {:,.2f}ms".format(roundtrip))
 
 @bot.command()
 async def defender(ctx: Context):
+    """Shows the current defender"""
     defender = society.get_defender()
     if defender:
         await ctx.respond("The current defender is `{}`".format(defender))
@@ -99,6 +101,7 @@ async def defender(ctx: Context):
 
 @bot.command()
 async def info(ctx: Context, address: str):
+    """Shows info about a given Kusama address."""
     if len(ctx.args) < 1:
         await ctx.respond("Usage: `!info <address>`")
         return
@@ -111,6 +114,7 @@ async def info(ctx: Context, address: str):
 
 @bot.command()
 async def candidates(ctx: Context):
+    """Shows the current candidates"""
     candidates = society.get_candidates_addresses()
     if len(candidates) > 0:
         await ctx.respond("The current candidates are `{}`".format(candidates))
@@ -119,6 +123,7 @@ async def candidates(ctx: Context):
 
 @bot.command()
 async def head(ctx: Context):
+    """Shows the current head"""
     head = society.get_head_address()
     if head:
         await ctx.respond("The current head is `{}`".format(head))
@@ -128,6 +133,7 @@ async def head(ctx: Context):
 
 @bot.command()
 async def set_address(ctx: Context, address: str):
+    """Sets a Kusama address for your matrix handle."""
     if len(ctx.args) < 1:
         await ctx.respond("Usage: `!set_address <address>`")
         return
@@ -140,6 +146,7 @@ async def set_address(ctx: Context, address: str):
 
 @bot.command()
 async def unset_address(ctx: Context):
+    """Unsets a Kusama address for your matrix handle"""
     if society.unset_matrix_handle():
         await ctx.respond("Unset address for {}".format(ctx.message.sender))
     else:
@@ -147,15 +154,12 @@ async def unset_address(ctx: Context):
 
 @bot.command()
 async def me(ctx: Context):
+    """Shows info about you."""
     address = society.get_address_for_matrix_handle(ctx.message.sender)
     if address:
         info = await get_info(address)
         await ctx.respond(info)
     else:
         await ctx.respond("You have not set your address yet. To do so, use `!set_address <address>`. Note that the !me command does not currently support addresses with an on-chain identity set.")
-
-@bot.command()
-async def usage(ctx: Context):
-    await ctx.respond("Usage: `!ping`, `!defender`, `!info <address>`, `!candidates`, `!head`, `!set_address <address>`, `!unset_address`, `!me`")
 
 bot.run(access_token=matrix_access_token)
