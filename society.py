@@ -31,16 +31,18 @@ def init(rpc_url=DEFAULT_RPC_URL, db_path=DEFAULT_DB_PATH):
     __DB_CUR__ = __DB_CONN__.cursor()
 
 def rpc_call(module, storage_function, params = []):
-    try:
-        return __RPC__.query(module = module, storage_function = storage_function, params = params)
-    except Exception as e:
-        logging.error("RPC call failed, :{}, retrying".format(e))
-        time.sleep(1)
-        __RPC__.connect_websocket()
-        if params:
-            rpc_call(module, storage_function, params)
-        else:
-            rpc_call(module, storage_function)
+    # Loop 10 times attempting to make the call
+    for i in range(10):
+        try:
+            return __RPC__.query(module = module, storage_function = storage_function, params = params)
+        except Exception as e:
+            logging.error("RPC call failed {} times, :{}, retrying in 5s".format(i+1,e))
+            time.sleep(5)
+            try:
+                __RPC__.connect_websocket()
+            except Exception as e:
+                logging.error("Websocket connection failed: {}".format(e))
+    logging.error("RPC call failed 10 times, giving up. Probably restart the bot")
 
 # sets
 
