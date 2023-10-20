@@ -15,9 +15,9 @@ rpc_url = os.getenv("RPC_URL")
 db_path = os.getenv("DB_PATH")
 prefix = os.getenv("PREFIX")
 loglevel = os.getenv("LOGLEVEL") or "INFO"
-print("Logging level: {}".format(loglevel))
-
-logging.basicConfig(level=logging.DEBUG)
+logging.getLogger()
+logging.basicConfig(level=loglevel)
+logging.info("Logging level: {}".format(loglevel))
 society.init(rpc_url, db_path)
 
 bot = niobot.NioBot(
@@ -33,7 +33,7 @@ async def period_message():
     first_run = True
     while True:
         blocks_left = society.get_blocks_until_next_period()
-        print("Blocks left until next period: {}".format(blocks_left))
+        logging.info("Blocks left until next period: {}".format(blocks_left))
         if blocks_left > last_blocks_left and not first_run:
             defender = society.get_defender()
             candidates = society.get_candidates()
@@ -52,7 +52,7 @@ The new head is `{}`.""".format(candidates, head)
             else:
                 message += """
 There are no candidates for this period."""
-            print(message)
+            logging.info(message)
             await bot.send_message(room, message)
 
         last_blocks_left = blocks_left
