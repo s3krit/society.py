@@ -28,6 +28,13 @@ bot = niobot.NioBot(
     owner_id = "@s3krit:fairydust.space"
 )
 
+# Formats a list as a markdown bulleted list
+def format_list(list):
+    response = ""
+    for item in list:
+        response += "* {}\n".format(item)
+    return response
+
 async def period_message():
     last_blocks_left = 0
     first_run = True
@@ -42,13 +49,13 @@ async def period_message():
             message = """\
 A new period has started. Blocks until next period: {}
 
-The current defender is `{}`.
+The current defender is {}.
 """.format(blocks_left, defender)
             if len(candidates) > 0:
                 message += """
-The current candidates are: `{}`
+The current candidates are:\n{}
                 
-The new head is `{}`.""".format(candidates, head)
+The current head is: {}.""".format(format_list(candidates), head)
             else:
                 message += """
 There are no candidates for this period."""
@@ -95,7 +102,7 @@ async def defender(ctx: Context):
     """Shows the current defender"""
     defender = society.get_defender()
     if defender:
-        await ctx.respond("The current defender is `{}`".format(defender))
+        await ctx.respond("The current defender is {}".format(defender))
     else:
         await ctx.respond("There is no defender")
 
@@ -117,7 +124,7 @@ async def candidates(ctx: Context):
     """Shows the current candidates"""
     candidates = society.get_candidates_addresses()
     if len(candidates) > 0:
-        await ctx.respond("The current candidates are `{}`".format(candidates))
+        await ctx.respond("The current candidates are:\n{}".format(format_list(candidates)))
     else:
         await ctx.respond("There are no candidates")
 
