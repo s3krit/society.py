@@ -42,7 +42,7 @@ async def period_message():
         blocks_left = society.get_blocks_until_next_period()
         logging.info("Blocks left until next period: {}".format(blocks_left))
         if blocks_left > last_blocks_left and not first_run:
-            defender = society.get_defender()
+            defender_info = society.get_defending()[0]
             candidates = society.get_candidates()
             head = society.get_head_address()
 
@@ -50,7 +50,9 @@ async def period_message():
 A new period has started. Blocks until next period: {}
 
 The current defender is {}.
-""".format(blocks_left, defender)
+
+The current skeptic is {}
+""".format(blocks_left, defender_info[0], defender_info[1])
             if len(candidates) > 0:
                 message += """
 The current candidates are:\n{}
@@ -100,9 +102,12 @@ async def ping(ctx: Context):
 @bot.command()
 async def defender(ctx: Context):
     """Shows the current defender"""
-    defender = society.get_defender()
+    defending_info = society.get_defending()
+    defender = defending_info[0]
+    approvals = defending_info[2]['approvals']
+    rejections = defending_info[2]['rejections']
     if defender:
-        await ctx.respond("The current defender is {}".format(defender))
+        await ctx.respond("The current defender is {}. So far they have {} approvals and {} rejections.".format(defender, approvals, rejections))
     else:
         await ctx.respond("There is no defender")
 

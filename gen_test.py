@@ -13,7 +13,7 @@ test_accounts = {
     'bad_addr': 'asdasdasdasd',
 }
 
-test_accounts['defender'] = society.get_defender_address()
+test_accounts['defender'] = society.get_defending_raw()
 test_accounts['founder'] = society.get_founder()
 candidates = society.get_candidates_addresses()
 if len(candidates) > 0:

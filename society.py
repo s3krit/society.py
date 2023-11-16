@@ -30,11 +30,14 @@ def init(rpc_url=DEFAULT_RPC_URL, db_path=DEFAULT_DB_PATH):
     __DB_CONN__ = sqlite3.connect(db_path)
     __DB_CUR__ = __DB_CONN__.cursor()
 
-def rpc_call(module, storage_function, params = []):
+def rpc_call(module, storage_function, params = [], map = False):
     # Loop 10 times attempting to make the call
-    for i in range(10):
+    for i in range(1):
         try:
-            return __RPC__.query(module = module, storage_function = storage_function, params = params)
+            if map:
+                return __RPC__.query_map(module = module, storage_function = storage_function, params = params)
+            else:
+                return __RPC__.query(module = module, storage_function = storage_function, params = params)
         except Exception as e:
             logging.error("RPC call failed {} times, :{}, retrying in 5s".format(i+1,e))
             time.sleep(5)
@@ -61,10 +64,12 @@ def unset_matrix_handle(address):
 
 # gets
 def get_members_addresses():
-    return rpc_call(module = 'Society', storage_function = 'Members').value
+    members = rpc_call(module = 'Society', storage_function = 'Members', map = True)
+    return list(map(lambda x: x.decode(), map(lambda x: x[0], members)))
 
 def get_candidates_addresses():
-    return rpc_call(module = 'Society', storage_function = 'Candidates').value
+    candidates = rpc_call(module = 'Society', storage_function = 'Candidates', map = True)
+    return list(candidates)
 
 def get_candidates():
     candidates = []
@@ -77,22 +82,28 @@ def get_candidates():
     return candidates
 
 def get_strikes(address):
-    return rpc_call(module = 'Society', storage_function = 'Strikes', params = [address]).value
+    return rpc_call(module = 'Society', storage_function = 'Members', params = [address]).decode()['strikes']
 
-def get_defender_address():
-    return rpc_call(module = 'Society', storage_function = 'Defender').value
+def get_defending_raw():
+    return list(rpc_call(module = 'Society', storage_function = 'Defending').decode())
 
 def get_head_address():
-    return rpc_call(module = 'Society', storage_function = 'Head').value
+    return rpc_call(module = 'Society', storage_function = 'Head').decode()
 
-def get_defender():
-    defender = get_defender_address()
+def get_defending():
+    defender_info = get_defending_raw()
+    defender = defender_info[0]
+    skeptic = defender_info[1]
+    # Remove skeptic from return result
     if defender:
         handle = get_matrix_handle(defender)
         if handle:
-            return handle
-        else:
-            return defender
+            defender_info[0] = handle
+    if skeptic:
+        handle = get_matrix_handle(skeptic)
+        if handle:
+            defender_info[1] = handle
+    return defender_info
 
 def get_matrix_handle(address):
     # first check if we have an override
@@ -161,7 +172,7 @@ def is_suspended_member(address):
     return rpc_call(module = 'Society', storage_function = 'SuspendedMembers', params = [address] ).value
 
 def is_candidate(address):
-    for candidate in rpc_call(module = 'Society', storage_function = 'Candidates').value:
+    for candidate in get_candidates_addresses():
         if candidate['who'] == address:
             return True
 
@@ -172,7 +183,7 @@ def is_founder(address):
     return rpc_call(module = 'Society', storage_function = 'Founder').value == address
 
 def is_defender(address):
-    return get_defender_address() == address
+    return get_defending_raw()[0] == address
 
 # util
 def is_valid_matrix_handle(matrix_handle):
