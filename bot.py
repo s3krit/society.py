@@ -2,6 +2,7 @@ import time
 import niobot
 import logging
 import society
+import messages
 import asyncio
 import os
 from dotenv import load_dotenv
@@ -28,45 +29,37 @@ bot = niobot.NioBot(
     owner_id = "@s3krit:fairydust.space"
 )
 
-# Formats a list as a markdown bulleted list
-def format_list(list):
-    response = ""
-    for item in list:
-        response += "* {}\n".format(item)
-    return response
 
-async def period_message():
+async def new_period_message():
     last_blocks_left = 0
     first_run = True
     while True:
         blocks_left = society.get_blocks_until_next_period()
         logging.info("Blocks left until next period: {}".format(blocks_left))
         if blocks_left > last_blocks_left and not first_run:
-            defender_info = society.get_defending()[0]
+            defender_info = society.get_defending()
             candidates = society.get_candidates()
             head = society.get_head_address()
 
-            message = """\
-A new period has started. Blocks until next period: {}
+            message = messages.new_period_message(blocks_left, defender_info, candidates, head, new_period=True)
 
-The current defender is {}.
-
-The current skeptic is {}
-""".format(blocks_left, defender_info[0], defender_info[1])
-            if len(candidates) > 0:
-                message += """
-The current candidates are:\n{}
-                
-The current head is: {}.""".format(format_list(candidates), head)
-            else:
-                message += """
-There are no candidates for this period."""
             logging.info(message)
             await bot.send_message(room, message)
 
         last_blocks_left = blocks_left
         first_run = False
         await asyncio.sleep(60)
+
+async def period_message():
+    blocks_left = society.get_blocks_until_next_period()
+    defender_info = society.get_defending()
+    candidates = society.get_candidates()
+    head = society.get_head_address()
+
+    message = messages.new_period_message(blocks_left, defender_info, candidates, head, new_period=False)
+
+    logging.info(message)
+    await bot.send_message(room, message)
 
 async def get_info(address):
     info = society.get_member_info(address)
@@ -91,7 +84,7 @@ async def on_command_error(ctx: Context, error: Exception):
 
 @bot.on_event("ready")
 async def on_ready(_: niobot.SyncResponse):
-    asyncio.create_task(period_message())
+    asyncio.create_task(new_period_message())
 
 @bot.command()
 async def ping(ctx: Context):
@@ -129,7 +122,7 @@ async def candidates(ctx: Context):
     """Shows the current candidates"""
     candidates = society.get_candidates_addresses()
     if len(candidates) > 0:
-        await ctx.respond("The current candidates are:\n{}".format(format_list(candidates)))
+        await ctx.respond("The current candidates are:\n{}".format(messages.format_list(candidates)))
     else:
         await ctx.respond("There are no candidates")
 
@@ -173,5 +166,18 @@ async def me(ctx: Context):
         await ctx.respond(info)
     else:
         await ctx.respond("You have not set your address yet. To do so, use `!set_address <address>`. Note that the !me command does not currently support addresses with an on-chain identity set.")
+
+@bot.command()
+async def period(ctx: Context):
+    """Shows info about the current period."""
+    blocks_left = society.get_blocks_until_next_period()
+    defender_info = society.get_defending()
+    candidates = society.get_candidates()
+    head = society.get_head_address()
+
+    message = messages.new_period_message(blocks_left, defender_info, candidates, head, new_period=False)
+
+    logging.info(message)
+    await ctx.respond(message)
 
 bot.run(access_token=matrix_access_token)
