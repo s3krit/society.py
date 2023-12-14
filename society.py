@@ -67,18 +67,16 @@ def get_members_addresses():
     members = rpc_call(module = 'Society', storage_function = 'Members', map = True)
     return list(map(lambda x: x.decode(), map(lambda x: x[0], members)))
 
-def get_candidates_addresses():
+def get_candidates_raw():
     candidates = rpc_call(module = 'Society', storage_function = 'Candidates', map = True)
-    return list(candidates)
+    return list(map(lambda candidate: (list(map(lambda field: field.decode(), candidate))), candidates))
 
 def get_candidates():
-    candidates = []
-    for candidate in get_candidates_addresses():
-        handle = get_matrix_handle(candidate['who'])
+    candidates = get_candidates_raw()
+    for candidate in candidates:
+        handle = get_matrix_handle(candidate[0])
         if handle:
-            candidates.append(handle)
-        else:
-            candidates.append(candidate['who'])
+            candidate[0] = handle
     return candidates
 
 def get_strikes(address):
@@ -172,7 +170,7 @@ def is_suspended_member(address):
     return rpc_call(module = 'Society', storage_function = 'SuspendedMembers', params = [address] ).value
 
 def is_candidate(address):
-    for candidate in get_candidates_addresses():
+    for candidate in get_candidates_raw():
         if candidate['who'] == address:
             return True
 

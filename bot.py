@@ -120,11 +120,8 @@ async def info(ctx: Context, address: str):
 @bot.command()
 async def candidates(ctx: Context):
     """Shows the current candidates"""
-    candidates = society.get_candidates_addresses()
-    if len(candidates) > 0:
-        await ctx.respond("The current candidates are:\n{}".format(messages.format_list(candidates)))
-    else:
-        await ctx.respond("There are no candidates")
+    candidates = society.get_candidates()
+    await ctx.respond(messages.candidates_message(candidates))
 
 @bot.command()
 async def head(ctx: Context):
@@ -179,5 +176,15 @@ async def period(ctx: Context):
 
     logging.info(message)
     await ctx.respond(message)
+
+@bot.command()
+async def skeptic(ctx: Context):
+    """Shows the current skeptic"""
+    defending_info = society.get_defending()
+    skeptic = defending_info[1]
+    if skeptic:
+        await ctx.respond("The current skeptic is `{}`".format(skeptic))
+    else:
+        await ctx.respond("There is no skeptic")
 
 bot.run(access_token=matrix_access_token)
