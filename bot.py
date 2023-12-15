@@ -36,6 +36,10 @@ async def new_period_message():
 
     while True:
         candidate_period = society.get_candidate_period()
+        if candidate_period.period == "voting":
+            logging.info("Blocks until end of voting period: {}".format(candidate_period.voting_blocks_left))
+        else:
+            logging.info("Blocks until end of claim period: {}".format(candidate_period.claim_blocks_left))
         if candidate_period.period != last_period and not first_run:
             # Period has changed. Send a message
             last_period = candidate_period.period
@@ -46,7 +50,6 @@ async def new_period_message():
             message = messages.period_message(candidate_period, defender_info, candidates, head, new_period=True)
             logging.info(message)
             await bot.send_message(room, message)
-
         first_run = False
         await asyncio.sleep(60)
 
