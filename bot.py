@@ -29,37 +29,37 @@ bot = niobot.NioBot(
     owner_id = "@s3krit:fairydust.space"
 )
 
-
 async def new_period_message():
-    last_blocks_left = 0
+    candidate_period = society.get_candidate_period()
+    last_period = candidate_period.period
     first_run = True
+
     while True:
-        blocks_left = society.get_blocks_until_next_period()
-        logging.info("Blocks left until next period: {}".format(blocks_left))
-        if blocks_left > last_blocks_left and not first_run:
-            defender_info = society.get_defending()
+        candidate_period = society.get_candidate_period()
+        if candidate_period.period != last_period and not first_run:
+            # Period has changed. Send a message
+            last_period = candidate_period.period
             candidates = society.get_candidates()
             head = society.get_head_address()
+            defender_info = society.get_defending()
 
-            message = messages.new_period_message(blocks_left, defender_info, candidates, head, new_period=True)
-
+            message = messages.period_message(candidate_period, defender_info, candidates, head, new_period=True)
             logging.info(message)
             await bot.send_message(room, message)
 
-        last_blocks_left = blocks_left
         first_run = False
         await asyncio.sleep(60)
 
-async def period_message():
-    blocks_left = society.get_blocks_until_next_period()
-    defender_info = society.get_defending()
-    candidates = society.get_candidates()
-    head = society.get_head_address()
+# async def challenge_period_message():
+#     candidate_period = society.get_candidate_period()
+#     defender_info = society.get_defending()
+#     candidates = society.get_candidates()
+#     head = society.get_head_address()
 
-    message = messages.new_period_message(blocks_left, defender_info, candidates, head, new_period=False)
+#     message = messages.period_message(candidate_period, defender_info, candidates, head, new_period=False)
 
-    logging.info(message)
-    await bot.send_message(room, message)
+#     logging.info(message)
+#     await bot.send_message(room, message)
 
 async def get_info(address):
     info = society.get_member_info(address)
@@ -167,12 +167,12 @@ async def me(ctx: Context):
 @bot.command()
 async def period(ctx: Context):
     """Shows info about the current period."""
-    blocks_left = society.get_blocks_until_next_period()
+    candidate_period = society.get_candidate_period()
     defender_info = society.get_defending()
     candidates = society.get_candidates()
     head = society.get_head_address()
 
-    message = messages.new_period_message(blocks_left, defender_info, candidates, head, new_period=False)
+    message = messages.period_message(candidate_period, defender_info, candidates, head, new_period=False)
 
     logging.info(message)
     await ctx.respond(message)

@@ -4,6 +4,7 @@ import sqlite3
 import time
 from substrateinterface import SubstrateInterface
 import logging
+from dataclasses import dataclass
 logging.getLogger()
 
 class MemberState(Enum):
@@ -13,9 +14,20 @@ class MemberState(Enum):
     SUSPENDED_CANDIDATE = 4
     NON_MEMBER = 5
 
-class Period(Enum):
-    CLAIM =1
-    VOTING = 2
+import datetime
+@dataclass
+class Period:
+    period: str = "voting"
+    voting_blocks_left: int = 72000
+    claim_blocks_left: int = 28800
+    voting_time_left: datetime.timedelta = datetime.timedelta(seconds = voting_blocks_left * 6)
+    claim_time_left: datetime.timedelta = datetime.timedelta(seconds = claim_blocks_left * 6)
+
+    def __post_init__(self):
+        self.voting_time_left = datetime.timedelta(seconds = self.voting_blocks_left * 6)
+        self.claim_time_left = datetime.timedelta(seconds = self.claim_blocks_left * 6)
+
+
 
 DEFAULT_DB_PATH = "./society_overrides.db"
 DEFAULT_RPC_URL = "wss://kusama-rpc.polkadot.io/"
@@ -141,11 +153,28 @@ def get_member_state(address):
     else:
         return MemberState.NON_MEMBER
 
-def get_blocks_until_next_period():
-    # Current block number
+# def get_blocks_until_next_challenge_period():
+#     # Current block number
+#     block = rpc_call(module = "System", storage_function = "Number").value
+#     period = 100800
+#     return period - (block % period)
+
+def get_candidate_period():
     block = rpc_call(module = "System", storage_function = "Number").value
-    period = 100800
-    return period - (block % period)
+    # vote period = 5 days in blocks
+    vote_period = 72000
+    # claim period = 2 days in blocks
+    claim_period = 28800
+    if block % (vote_period + claim_period) < vote_period:
+        period = "voting"
+        voting_blocks_left = vote_period - block % (vote_period + claim_period)
+        claim_blocks_left = claim_period
+        return Period(period, voting_blocks_left, claim_blocks_left)
+    else:
+        period = "claim"
+        voting_blocks_left = 0
+        claim_blocks_left = vote_period + claim_period - block % (vote_period + claim_period)
+        return Period(period, voting_blocks_left, claim_blocks_left)
 
 def get_address_for_matrix_handle(matrix_handle):
     # first check if we have an override
@@ -160,7 +189,7 @@ def get_address_for_matrix_handle(matrix_handle):
     #     return None
     else:
         return None
-
+    
 # checks
 
 def is_member(address):
