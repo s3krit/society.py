@@ -45,6 +45,7 @@ def init(rpc_url=DEFAULT_RPC_URL, db_path=DEFAULT_DB_PATH):
 def rpc_call(module, storage_function, params = [], map = False):
     # Loop 10 times attempting to make the call
     for i in range(10):
+        __RPC__.connect_websocket()
         try:
             if map:
                 return __RPC__.query_map(module = module, storage_function = storage_function, params = params)
