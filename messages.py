@@ -3,13 +3,17 @@ from mako.template import Template
 def candidates_message(candidates):
     DIVISOR = 1000000000000
     template = Template("""\
-% if len(candidates) > 0:
+% if len(candidates) > 1:
 The current candidates are:
 %   for candidate in candidates:
 * ${candidate[0]}
   * Bid: ${candidate[1]['bid']/DIVISOR} KSM
   * Approvals: ${candidate[1]['tally']['approvals']}, Rejections: ${candidate[1]['tally']['rejections']}
 %   endfor
+% elif len(candidates) == 1:
+* ${candidates[0][0]}
+  * Bid: ${candidates[0][1]['bid']/DIVISOR} KSM
+  * Approvals: ${candidates[0][1]['tally']['approvals']}, Rejections: ${candidates[0][1]['tally']['rejections']}
 % else:
 There are no candidates
 % endif

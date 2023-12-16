@@ -121,10 +121,17 @@ async def info(ctx: Context, address: str):
         await ctx.respond("No info available for that address")
 
 @bot.command()
-async def candidates(ctx: Context):
-    """Shows the current candidates"""
+async def candidates(ctx: Context, address: str = None):
+    """Shows the current candidates. Usage !candidates <address> (to optionally show info about a specific candidate))"""
     candidates = society.get_candidates()
-    await ctx.respond(messages.candidates_message(candidates))
+    if (address):
+        for candidate in candidates:
+            if candidate[0] == address:
+                await ctx.respond(messages.candidates_message([candidate]))
+                return
+        await ctx.respond("No candidate with address `{}`".format(address))
+    else:
+        await ctx.respond(messages.candidates_message(candidates))
 
 @bot.command()
 async def head(ctx: Context):
