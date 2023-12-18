@@ -159,7 +159,7 @@ async def set_address(ctx: Context, address: str):
 @bot.command()
 async def unset_address(ctx: Context):
     """Unsets a Kusama address for your matrix handle"""
-    if society.unset_matrix_handle():
+    if society.unset_matrix_handle(ctx.message.sender):
         await ctx.respond("Unset address for {}".format(ctx.message.sender))
     else:
         await ctx.respond("Failed to unset address for {}".format(ctx.message.sender))

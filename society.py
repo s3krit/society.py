@@ -71,9 +71,9 @@ def set_matrix_handle(address, matrix_handle):
     return True
 
 def unset_matrix_handle(address):
-    __DB_CUR__.execute(''' DELETE FROM accounts WHERE address = ? ''', (address,))
+    __DB_CUR__.execute(''' DELETE FROM accounts WHERE matrix_handle = ? ''', (address,))
     __DB_CONN__.commit()
-    return True
+    return True if __DB_CUR__.rowcount > 0 else False
 
 # gets
 def get_members_addresses():
