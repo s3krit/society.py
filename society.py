@@ -11,7 +11,6 @@ class MemberState(Enum):
     MEMBER = 1
     CANDIDATE = 2
     SUSPENDED_MEMBER = 3
-    SUSPENDED_CANDIDATE = 4
     NON_MEMBER = 5
 
 import datetime
@@ -93,7 +92,10 @@ def get_candidates():
     return candidates
 
 def get_strikes(address):
-    return rpc_call(module = 'Society', storage_function = 'Members', params = [address]).decode()['strikes']
+    if is_member(address) or is_suspended_member(address):
+        return rpc_call(module = 'Society', storage_function = 'Members', params = [address]).decode()['strikes']
+    else:
+        return 0
 
 def get_defending_raw():
     return list(rpc_call(module = 'Society', storage_function = 'Defending').decode())
@@ -149,8 +151,6 @@ def get_member_state(address):
         return MemberState.SUSPENDED_MEMBER
     elif is_candidate(address):
         return MemberState.CANDIDATE
-    elif is_suspended_candidate(address):
-        return MemberState.SUSPENDED_CANDIDATE
     else:
         return MemberState.NON_MEMBER
 
@@ -201,11 +201,8 @@ def is_suspended_member(address):
 
 def is_candidate(address):
     for candidate in get_candidates_raw():
-        if candidate['who'] == address:
+        if candidate[0] == address:
             return True
-
-def is_suspended_candidate(address):
-    return rpc_call(module = 'Society', storage_function = 'SuspendedCandidates', params = [address] ).value
 
 def is_founder(address):
     return rpc_call(module = 'Society', storage_function = 'Founder').value == address
