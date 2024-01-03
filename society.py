@@ -126,6 +126,14 @@ class Society:
                 defender_info[1] = handle
         return defender_info
 
+    def get_candidate_skeptic(self):
+        skeptic = self.rpc_call(module = 'Society', storage_function = 'Skeptic').decode()
+        if skeptic:
+            handle = self.get_matrix_handle(skeptic)
+            if handle:
+                return handle
+        return skeptic
+
     def get_matrix_handle(self, address):
         # first check if we have an override
         self.db_cur.execute(''' SELECT matrix_handle FROM accounts WHERE address = ? ''', (address,))

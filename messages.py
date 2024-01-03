@@ -20,7 +20,7 @@ There are no candidates
 """)
     return template.render(candidates = candidates, DIVISOR = DIVISOR)
 
-def period_message(candidate_period, defender_info, candidates, head, new_period: True):
+def period_message(candidate_period, defender_info, candidates, head, candidate_skeptic, new_period: True):
     candidate_text = candidates_message(candidates)
     print(candidate_period)
     template = Template("""\
@@ -43,6 +43,8 @@ We are currently in the claim period. If you were a candidate in the previous pe
 The current head is ${head}.
 % endif
 
+The current skeptic for the candidates is ${candidate_skeptic}.
+
 -----
 
 %if candidate_period.period == "voting" and new_period:
@@ -61,7 +63,7 @@ The current defender is ${defender_info[0]}.
   * Rejections: ${defender_info[2]['rejections']}
 % endif
 
-The current skeptic is ${defender_info[1]}.
+The current skeptic for the defender is ${defender_info[1]}.
 """)
-    return template.render(candidate_period = candidate_period, defender_info = defender_info, candidate_text = candidate_text, head = head, new_period = new_period)
+    return template.render(candidate_period = candidate_period, defender_info = defender_info, candidate_text = candidate_text, head = head, candidate_skeptic = candidate_skeptic,  new_period = new_period)
 

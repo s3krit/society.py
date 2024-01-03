@@ -48,8 +48,9 @@ async def new_period_message():
             candidates = soc.get_candidates()
             head = soc.get_head_address()
             defender_info = soc.get_defending()
+            candidate_skeptic = soc.get_candidate_skeptic()
 
-            message = messages.period_message(candidate_period, defender_info, candidates, head, new_period=True)
+            message = messages.period_message(candidate_period, defender_info, candidates, head, candidate_skeptic, new_period=True)
             logging.info(message)
             await bot.send_message(room, message)
         first_run = False
@@ -172,20 +173,34 @@ async def period(ctx: Context):
     defender_info = soc.get_defending()
     candidates = soc.get_candidates()
     head = soc.get_head_address()
+    candidate_skeptic = soc.get_candidate_skeptic()
 
-    message = messages.period_message(candidate_period, defender_info, candidates, head, new_period=False)
+    message = messages.period_message(candidate_period, defender_info, candidates, head, candidate_skeptic, new_period=False)
 
     logging.info(message)
     await ctx.respond(message)
 
 @bot.command()
-async def skeptic(ctx: Context):
-    """Shows the current skeptic"""
+async def skeptics(ctx: Context):
+    """Shows the current skeptics"""
     defending_info = soc.get_defending()
-    skeptic = defending_info[1]
-    if skeptic:
-        await ctx.respond("The current skeptic is {}".format(skeptic))
+    message = ""
+    defender_skeptic = defending_info[1]
+    candidate_skeptic = soc.get_candidate_skeptic()
+    if defender_skeptic:
+        message += "The current skeptic for the defender is {}\n\n".format(defender_skeptic)
     else:
-        await ctx.respond("There is no skeptic")
+        message += "There is no skeptic for the current defender.\n\n"
+    if candidate_skeptic:
+        message += "The current skeptic for the candidates is {}".format(candidate_skeptic)
+    else:
+        message += "There is no skeptic for the current candidates."
+
+    await ctx.respond(message)
+
+@bot.command()
+async def skeptic(ctx: Context):
+    """Deprecated. Please use !skeptics"""
+    await skeptics(ctx)
 
 bot.run(access_token=matrix_access_token)
