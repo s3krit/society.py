@@ -4,3 +4,5 @@ __pycache__
 .env
 requirements.txt
 handles.csv
+check.sh
+.vscode

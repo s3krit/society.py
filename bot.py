@@ -19,7 +19,8 @@ loglevel = os.getenv("LOGLEVEL") or "INFO"
 logging.getLogger()
 logging.basicConfig(level=loglevel)
 logging.info("Logging level: {}".format(loglevel))
-society.init(rpc_url, db_path)
+
+soc = society.Society(rpc_url, db_path)
 
 bot = niobot.NioBot(
     homeserver = "https://matrix.org",
@@ -29,13 +30,14 @@ bot = niobot.NioBot(
     owner_id = "@s3krit:fairydust.space"
 )
 
+
 async def new_period_message():
-    candidate_period = society.get_candidate_period()
+    candidate_period = soc.get_candidate_period()
     last_period = candidate_period.period
     first_run = True
 
     while True:
-        candidate_period = society.get_candidate_period()
+        candidate_period = soc.get_candidate_period()
         if candidate_period.period == "voting":
             logging.info("Blocks until end of voting period: {}".format(candidate_period.voting_blocks_left))
         else:
@@ -43,9 +45,9 @@ async def new_period_message():
         if candidate_period.period != last_period and not first_run:
             # Period has changed. Send a message
             last_period = candidate_period.period
-            candidates = society.get_candidates()
-            head = society.get_head_address()
-            defender_info = society.get_defending()
+            candidates = soc.get_candidates()
+            head = soc.get_head_address()
+            defender_info = soc.get_defending()
 
             message = messages.period_message(candidate_period, defender_info, candidates, head, new_period=True)
             logging.info(message)
@@ -53,19 +55,8 @@ async def new_period_message():
         first_run = False
         await asyncio.sleep(60)
 
-# async def challenge_period_message():
-#     candidate_period = society.get_candidate_period()
-#     defender_info = society.get_defending()
-#     candidates = society.get_candidates()
-#     head = society.get_head_address()
-
-#     message = messages.period_message(candidate_period, defender_info, candidates, head, new_period=False)
-
-#     logging.info(message)
-#     await bot.send_message(room, message)
-
 async def get_info(address):
-    info = society.get_member_info(address)
+    info = soc.get_member_info(address)
     if info:
         response = ""
         for key in info:
@@ -98,7 +89,7 @@ async def ping(ctx: Context):
 @bot.command()
 async def defender(ctx: Context):
     """Shows the current defender"""
-    defending_info = society.get_defending()
+    defending_info = soc.get_defending()
     defender = defending_info[0]
     approvals = defending_info[2]['approvals']
     rejections = defending_info[2]['rejections']
@@ -123,7 +114,7 @@ async def info(ctx: Context, address: str):
 @bot.command()
 async def candidates(ctx: Context, address: str = None):
     """Shows the current candidates. Usage !candidates <address> (to optionally show info about a specific candidate))"""
-    candidates = society.get_candidates()
+    candidates = soc.get_candidates()
     if (address):
         for candidate in candidates:
             if candidate[0] == address:
@@ -136,7 +127,7 @@ async def candidates(ctx: Context, address: str = None):
 @bot.command()
 async def head(ctx: Context):
     """Shows the current head"""
-    head = society.get_head_address()
+    head = soc.get_head_address()
     if head:
         await ctx.respond("The current head is `{}`".format(head))
     else:
@@ -151,7 +142,7 @@ async def set_address(ctx: Context, address: str):
         return
     address = ctx.args[0]
     matrix_handle = ctx.message.sender
-    if society.set_matrix_handle(address, matrix_handle):
+    if soc.set_matrix_handle(address, matrix_handle):
         await ctx.respond("Set matrix handle {} for address `{}`".format(matrix_handle, address))
     else:
         await ctx.respond("Failed to set matrix handle {} for address `{}`".format(matrix_handle, address))
@@ -159,7 +150,7 @@ async def set_address(ctx: Context, address: str):
 @bot.command()
 async def unset_address(ctx: Context):
     """Unsets a Kusama address for your matrix handle"""
-    if society.unset_matrix_handle(ctx.message.sender):
+    if soc.unset_matrix_handle(ctx.message.sender):
         await ctx.respond("Unset address for {}".format(ctx.message.sender))
     else:
         await ctx.respond("Failed to unset address for {}".format(ctx.message.sender))
@@ -167,7 +158,7 @@ async def unset_address(ctx: Context):
 @bot.command()
 async def me(ctx: Context):
     """Shows info about you."""
-    address = society.get_address_for_matrix_handle(ctx.message.sender)
+    address = soc.get_address_for_matrix_handle(ctx.message.sender)
     if address:
         info = await get_info(address)
         await ctx.respond(info)
@@ -177,10 +168,10 @@ async def me(ctx: Context):
 @bot.command()
 async def period(ctx: Context):
     """Shows info about the current period."""
-    candidate_period = society.get_candidate_period()
-    defender_info = society.get_defending()
-    candidates = society.get_candidates()
-    head = society.get_head_address()
+    candidate_period = soc.get_candidate_period()
+    defender_info = soc.get_defending()
+    candidates = soc.get_candidates()
+    head = soc.get_head_address()
 
     message = messages.period_message(candidate_period, defender_info, candidates, head, new_period=False)
 
@@ -190,10 +181,10 @@ async def period(ctx: Context):
 @bot.command()
 async def skeptic(ctx: Context):
     """Shows the current skeptic"""
-    defending_info = society.get_defending()
+    defending_info = soc.get_defending()
     skeptic = defending_info[1]
     if skeptic:
-        await ctx.respond("The current skeptic is `{}`".format(skeptic))
+        await ctx.respond("The current skeptic is {}".format(skeptic))
     else:
         await ctx.respond("There is no skeptic")
 
