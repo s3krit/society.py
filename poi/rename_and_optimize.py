@@ -52,9 +52,9 @@ def rename_and_optimize(image_path, member_hash):
         print(f'Optimized {image_path}')
 
         os.rename(image_path, new_image_path)
-        print(f"Image renamed to: {new_filename}")
+        print(f"Image renamed to: {new_image_path}")
 
-        return new_filename
+        return new_image_path
     except Exception as e:
         print(f"Exception occurred: {e}")
         sys.exit(1)

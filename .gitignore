@@ -6,5 +6,6 @@ requirements.txt
 handles.csv
 check.sh
 .vscode
-poi/images
+poi/temp
+poi/images*
 poi/.env

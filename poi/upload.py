@@ -25,12 +25,15 @@ def unpin(ipfs_hash):
         if response.status_code == 200:
             print(
                 f"File with IPFS CID {ipfs_hash} has been successfully unpinned.")
+            return True
         else:
             print(f"Error unpinning file. Status code: {response.status_code}")
             print(response.text)
+            return False
 
     except Exception as e:
         print(f"An error occurred: {e}")
+        return False
 
 
 def create_payload(folder_path, metadata):

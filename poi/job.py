@@ -3,10 +3,11 @@ import requests
 import shutil
 import sys
 import traceback
+from datetime import datetime
 from dotenv import load_dotenv
-from download import download
-from rename_and_optimize import rename_and_optimize
-from upload import unpin, upload
+from poi.download import download
+from poi.rename_and_optimize import rename_and_optimize
+from poi.upload import unpin, upload
 
 load_dotenv()
 
@@ -54,9 +55,9 @@ def move_file_to_folder(file_path, destination_folder, force):
         destination_folder, os.path.basename(file_path))
 
     if os.path.exists(destination_file_path) and not force:
-        print(
-            f"Error: The file {file_path} already exists. Use `force` to overwrite.")
-        sys.exit(1)
+        message = f"Image for this member already exists. Use `force` to overwrite."
+        print(message)
+        sys.exit(message)
 
     shutil.move(file_path, destination_file_path)
 
@@ -65,21 +66,28 @@ def move_file_to_folder(file_path, destination_folder, force):
 
 def job(image_path, member_hash, force):
     try:
-        image_folder = 'images'
-        current_pinned_hash = get_latest_pinned_hash()
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        image_folder = f"poi/images-{timestamp}"
 
+        current_pinned_hash = get_latest_pinned_hash()
         download(current_pinned_hash, image_folder)
+
         new_filename = rename_and_optimize(image_path, member_hash)
         move_file_to_folder(new_filename, image_folder, force)
+
         success, new_pinned_hash = upload(image_folder)
         if success and new_pinned_hash != current_pinned_hash:
-            unpin(current_pinned_hash)
+            return unpin(current_pinned_hash), None
+        return success, None
     except Exception as e:
         tb = traceback.format_exc()
         print(f"An error occurred: {e}")
         print("Traceback details:")
         print(tb)
-
+        return False, e
+    except SystemExit as e:
+        print(f"Caught SystemExit: {e}")
+        return False, e
 
 def main():
     if len(sys.argv) < 3 or len(sys.argv) > 4:
