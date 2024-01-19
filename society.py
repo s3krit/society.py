@@ -38,7 +38,7 @@ class Period:
 class Society:
 
     DEFAULT_DB_PATH = "./society_overrides.db"
-    DEFAULT_RPC_URL = "wss://kusama-rpc.polkadot.io/"
+    DEFAULT_RPC_URL = "wss://rpc.ibp.network/kusama/"
 
     def __init__(self, rpc_url=DEFAULT_RPC_URL, db_path=DEFAULT_DB_PATH):
         self.rpc = substrateinterface.SubstrateInterface(url = rpc_url)
@@ -82,7 +82,7 @@ class Society:
     def get_members_addresses(self):
         members = self.rpc_call(module = 'Society', storage_function = 'Members', map = True)
         return list(map(lambda x: x.decode(), map(lambda x: x[0], members)))
-    
+
     def get_suspended_members_addresses(self):
         members = self.rpc_call(module = 'Society', storage_function = 'SuspendedMembers', map = True)
         return list(map(lambda x: x.decode(), map(lambda x: x[0], members)))
@@ -200,7 +200,7 @@ class Society:
         #     return None
         else:
             return None
-        
+
     # checks
 
     def is_member(self, address):

@@ -1,3 +1,4 @@
+import re
 import time
 import niobot
 import logging
@@ -6,7 +7,8 @@ import messages
 import asyncio
 import os
 from dotenv import load_dotenv
-from niobot import Context
+from niobot import Context, RoomMessage, RoomMessageText
+from handle_upload import HandleUpload
 
 load_dotenv()
 
@@ -81,6 +83,16 @@ async def on_command_error(ctx: Context, error: Exception):
 async def on_ready(_: niobot.SyncResponse):
     asyncio.create_task(new_period_message())
 
+async def message_listener(room, event):
+    if isinstance(event, RoomMessageText):
+        pattern = f"([{re.escape(prefix)}|!]?upload.*)"
+        match = re.search(pattern, event.body)
+        if match:
+            handle_upload = HandleUpload(bot, room, event)
+            await handle_upload.handle(match.group(0), soc)
+
+bot.add_event_callback(message_listener, RoomMessage)
+
 @bot.command()
 async def ping(ctx: Context):
     """Shows the roundtrip latency"""
@@ -113,6 +125,11 @@ async def info(ctx: Context, address: str):
         await ctx.respond("No info available for that address")
 
 @bot.command()
+async def upload(ctx: Context, address: str, force_or_remove: str = None):
+    """Upload PoI image to IPFS. Use `force` to overwrite an existing image or `remove` to delete it."""
+    pass
+
+@bot.command()
 async def candidates(ctx: Context, address: str = None):
     """Shows the current candidates. Usage !candidates <address> (to optionally show info about a specific candidate))"""
     candidates = soc.get_candidates()
@@ -133,7 +150,6 @@ async def head(ctx: Context):
         await ctx.respond("The current head is `{}`".format(head))
     else:
         await ctx.respond("There is no head, something must have gone horribly wrong")
-    
 
 @bot.command()
 async def set_address(ctx: Context, address: str):
