@@ -89,7 +89,7 @@ async def message_listener(room, event):
         match = re.search(pattern, event.body)
         if match:
             handle_upload = HandleUpload(bot, room, event)
-            await handle_upload.handle(match.group(0))
+            await handle_upload.handle(match.group(0), soc)
 
 bot.add_event_callback(message_listener, RoomMessage)
 

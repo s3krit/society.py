@@ -14,7 +14,7 @@ class HandleUpload:
         whitelist = ["@laurogripa:matrix.org", "@s3krit:fairydust.space", "@rtti-5220:matrix.org"]
         return self.event.sender in whitelist
 
-    async def handle(self, command):
+    async def handle(self, command, soc):
         if not is_valid_command(command, self.event):
             return
 
@@ -34,6 +34,10 @@ class HandleUpload:
         address = args[0]
         if not is_valid_address(address):
             await self.respond("The address provided is not valid")
+            return
+
+        if not soc.is_member(address):
+            await self.respond("The address provided is not a member")
             return
 
         image_url = extract_image_url(original_event)
