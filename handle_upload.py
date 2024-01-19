@@ -2,6 +2,7 @@ import os
 import aiohttp
 from urllib.parse import urlparse
 from poi.job import job
+from poi.remove import remove
 from society import is_valid_address
 
 class HandleUpload:
@@ -26,12 +27,21 @@ class HandleUpload:
         if len(args) < 1 or len(args) > 2:
             return
 
+        address = args[0]
+        if len(args) > 1 and args[1] == 'remove':
+            success, message = remove(address)
+            if success:
+                await self.respond("Removed file from IPFS.")
+                return True
+            else:
+                await self.respond("Removal failed: {}".format(message))
+                return False
+
         original_event = await self.fetch_original_event()
         if not is_image(original_event):
             await self.respond("You are not replying to an image. Usage: `!upload <address> [force]` replying to an image")
             return
 
-        address = args[0]
         if not is_valid_address(address):
             await self.respond("The address provided is not valid")
             return

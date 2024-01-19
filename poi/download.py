@@ -35,6 +35,7 @@ def download(ipfs_hash, download_path):
             print(f"Downloaded {file_name} to {download_path}")
     except Exception as e:
         print(f"Error: {e}")
+        raise e
 
 
 def main():
