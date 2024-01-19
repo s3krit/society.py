@@ -125,8 +125,8 @@ async def info(ctx: Context, address: str):
         await ctx.respond("No info available for that address")
 
 @bot.command()
-async def upload(ctx: Context, address: str, force: str = None):
-    """Upload PoI image to IPFS. Use `force` to overwrite an existing image."""
+async def upload(ctx: Context, address: str, force_or_remove: str = None):
+    """Upload PoI image to IPFS. Use `force` to overwrite an existing image or `remove` to delete it."""
     pass
 
 @bot.command()

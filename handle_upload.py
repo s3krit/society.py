@@ -39,7 +39,7 @@ class HandleUpload:
 
         original_event = await self.fetch_original_event()
         if not is_image(original_event):
-            await self.respond("You are not replying to an image. Usage: `!upload <address> [force]` replying to an image")
+            await self.respond("You are not replying to an image. Usage: `!upload <address> [force|remove]` replying to an image")
             return
 
         if not is_valid_address(address):
